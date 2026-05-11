@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
 export const Route = createFileRoute('/')({
@@ -12,6 +12,7 @@ type PingResponse = {
 };
 
 function HomePage() {
+  const navigate = useNavigate();
   const [apiStatus, setApiStatus] = useState<'checking' | 'ok' | 'fail'>(
     'checking'
   );
@@ -53,7 +54,7 @@ function HomePage() {
           transition-all duration-200 hover:scale-105
           active:scale-95
         "
-        onClick={() => alert('Sélection de musique à venir (Étape 2)')}
+        onClick={() => void navigate({ to: '/game' })}
       >
         ▶ PRESS START
       </button>
@@ -87,7 +88,7 @@ function HomePage() {
 
       {/* Version en bas à droite */}
       <p className="font-body text-vapor-white/30 fixed right-6 bottom-6 z-20 text-xs">
-        v0.1.0 — étape 1
+        v0.2.0 — étape 2
       </p>
     </div>
   );
