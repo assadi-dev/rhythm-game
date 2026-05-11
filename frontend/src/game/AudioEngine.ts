@@ -21,6 +21,13 @@ export class AudioEngine {
     return this.context.decodeAudioData(arrayBuffer);
   }
 
+  // Enregistre t=0 pour currentTime sans lancer de son — utile pour synchroniser
+  // le jeu sans avoir besoin d'un fichier audio (le contexte tourne déjà)
+  markStart(): void {
+    if (!this.context) throw new Error('AudioEngine: call unlock() first');
+    this.startTime = this.context.currentTime;
+  }
+
   play(buffer: AudioBuffer, delaySeconds = 0): void {
     if (!this.context) throw new Error('AudioEngine: call unlock() first');
     this.sourceNode?.stop();

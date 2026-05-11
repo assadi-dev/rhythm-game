@@ -54,7 +54,7 @@ function HomePage() {
           transition-all duration-200 hover:scale-105
           active:scale-95
         "
-        onClick={() => void navigate({ to: '/game' })}
+        onClick={() => void navigate({ to: '/songs' })}
       >
         ▶ PRESS START
       </button>
@@ -88,7 +88,7 @@ function HomePage() {
 
       {/* Version en bas à droite */}
       <p className="font-body text-vapor-white/30 fixed right-6 bottom-6 z-20 text-xs">
-        v0.2.0 — étape 2
+        v0.4.0 — étape 4
       </p>
     </div>
   );

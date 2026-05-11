@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { GameScene } from './scenes/GameScene';
 
-export function createPhaserGame(parent: HTMLElement): Phaser.Game {
+export function createPhaserGame(parent: HTMLElement, songId: string): Phaser.Game {
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,
     backgroundColor: '#1a0b2e',
-    scene: [GameScene],
+    scene: [new GameScene(songId)],
     scale: {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,

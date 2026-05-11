@@ -109,8 +109,8 @@ GET  /api/leaderboard/song/:id  → top 100 par musique
 
 - [x] **Étape 1** — Setup projets, communication front ↔ back, design vaporwave
 - [x] **Étape 2** — AudioEngine + GameScene minimaliste (1 note qui descend)
-- [ ] **Étape 3** — Gameplay complet (4 lanes, scoring, combo, effets visuels)
-- [ ] **Étape 4** — Pages React (sélection musique, résultats, leaderboard)
+- [x] **Étape 3** — Gameplay complet (4 lanes, scoring, combo, effets visuels)
+- [x] **Étape 4** — Pages React (sélection musique, résultats, leaderboard)
 - [ ] **Étape 5** — Backend complet (Drizzle schema, routes, persistance PostgreSQL)
 - [ ] **Étape 6** — Beat detector automatique (script TS)
 - [ ] **Étape 7** — Intégration finale + polish
