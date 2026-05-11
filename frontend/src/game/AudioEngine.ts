@@ -14,18 +14,21 @@ export class AudioEngine {
     }
   }
 
-  async loadBuffer(url: string): Promise<AudioBuffer> {
-    if (!this.context) throw new Error('AudioEngine: call unlock() first');
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    return this.context.decodeAudioData(arrayBuffer);
+  // Pré-charge les octets audio sans AudioContext (réseau pur, pas de user gesture requis)
+  async prefetch(url: string): Promise<ArrayBuffer | null> {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      return res.arrayBuffer();
+    } catch {
+      return null;
+    }
   }
 
-  // Enregistre t=0 pour currentTime sans lancer de son — utile pour synchroniser
-  // le jeu sans avoir besoin d'un fichier audio (le contexte tourne déjà)
-  markStart(): void {
+  // Décode un ArrayBuffer pré-chargé en AudioBuffer (requiert AudioContext déverrouillé)
+  async decodeAudioData(bytes: ArrayBuffer): Promise<AudioBuffer> {
     if (!this.context) throw new Error('AudioEngine: call unlock() first');
-    this.startTime = this.context.currentTime;
+    return this.context.decodeAudioData(bytes.slice(0));
   }
 
   play(buffer: AudioBuffer, delaySeconds = 0): void {
@@ -38,10 +41,10 @@ export class AudioEngine {
     this.sourceNode.start(this.startTime);
   }
 
-  // Génère un bip court via OscillatorNode — utile pour le POC sans fichier audio
+  // Génère un bip court via OscillatorNode — fallback quand pas de fichier audio
   playTone(frequency = 440, duration = 0.15): void {
     if (!this.context) throw new Error('AudioEngine: call unlock() first');
-    const osc = this.context.createOscillator();
+    const osc  = this.context.createOscillator();
     const gain = this.context.createGain();
     osc.connect(gain);
     gain.connect(this.context.destination);
@@ -52,7 +55,13 @@ export class AudioEngine {
     osc.stop(this.context.currentTime + duration);
   }
 
-  // Temps écoulé depuis le début du morceau (source de vérité pour le timing)
+  // Fallback : démarre le timer sans son (quand pas de fichier audio disponible)
+  markStart(): void {
+    if (!this.context) throw new Error('AudioEngine: call unlock() first');
+    this.startTime = this.context.currentTime;
+  }
+
+  // Temps écoulé depuis le début du morceau — source de vérité pour le timing
   get currentTime(): number {
     if (!this.context) return 0;
     return Math.max(0, this.context.currentTime - this.startTime);

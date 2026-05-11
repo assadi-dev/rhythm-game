@@ -9,9 +9,9 @@ export const Route = createFileRoute('/songs')({
 function SongsPage() {
   const navigate = useNavigate();
 
-  function handleSelect(song: SongInfo) {
+  function handleSelect(song: SongInfo, chartId: string) {
     if (!song.available) return;
-    void navigate({ to: '/game', search: { songId: song.id } });
+    void navigate({ to: '/game', search: { songId: song.id, chartId } });
   }
 
   return (
@@ -27,7 +27,7 @@ function SongsPage() {
       {/* Song list */}
       <div className="w-full max-w-2xl flex flex-col gap-4">
         {MOCK_SONGS.map((song) => (
-          <SongCard key={song.id} song={song} onSelect={handleSelect} />
+          <SongCard key={song.id} song={song} onSelect={(s, cId) => handleSelect(s, cId)} />
         ))}
       </div>
 
@@ -48,7 +48,7 @@ function SongCard({
   onSelect,
 }: {
   song: SongInfo;
-  onSelect: (s: SongInfo) => void;
+  onSelect: (s: SongInfo, chartId: string) => void;
 }) {
   const minutes = Math.floor(song.duration / 60);
   const seconds = (song.duration % 60).toString().padStart(2, '0');
@@ -78,7 +78,7 @@ function SongCard({
   return (
     <button
       type="button"
-      onClick={() => onSelect(song)}
+      onClick={() => onSelect(song, song.difficulties[0]?.id ?? song.id + '-normal')}
       className="
         text-left border border-vapor-pink/40 bg-vapor-bg-mid/40 p-5
         hover:border-vapor-pink hover:bg-vapor-bg-mid/70

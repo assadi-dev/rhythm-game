@@ -27,7 +27,7 @@ function makeDemoChart(): NoteData[] {
 }
 
 export class GameScene extends Phaser.Scene {
-  private readonly songId: string;
+  private readonly chartId: string;
   private _audio!: AudioEngine;
   private notes: Note[] = [];
   private pending: NoteData[] = [];
@@ -43,22 +43,23 @@ export class GameScene extends Phaser.Scene {
   private comboText!: Phaser.GameObjects.Text;
   private judgeText!: Phaser.GameObjects.Text;
 
-  constructor(songId = 'demo') {
+  constructor(chartId = 'demo-normal') {
     super({ key: 'GameScene' });
-    this.songId = songId;
+    this.chartId = chartId;
   }
 
   preload(): void {
-    this.load.json('chart', `/assets/charts/${this.songId}.json`);
+    // Charge depuis l'API backend — fallback sur le fichier statique si hors-ligne
+    this.load.json('chart', `/api/charts/${this.chartId}`);
   }
 
   setAudio(audio: AudioEngine): void {
     this._audio = audio;
   }
 
+  // GameCanvas appelle audio.play() ou audio.markStart() AVANT d'appeler start()
   start(): void {
     this.started = true;
-    this._audio.markStart();
   }
 
   reset(): void {

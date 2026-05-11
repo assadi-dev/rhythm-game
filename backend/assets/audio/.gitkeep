@@ -1,0 +1,3 @@
+# Dépose tes fichiers MP3 ici.
+# Convention : {songId}.mp3  →  ex. demo.mp3
+# Servis par Express sur /audio/{songId}.mp3
