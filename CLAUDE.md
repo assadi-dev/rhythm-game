@@ -112,7 +112,7 @@ GET  /api/leaderboard/song/:id  → top 100 par musique
 - [x] **Étape 3** — Gameplay complet (4 lanes, scoring, combo, effets visuels)
 - [x] **Étape 4** — Pages React (sélection musique, résultats, leaderboard)
 - [x] **Étape 5** — Backend complet (Drizzle schema, routes, persistance PostgreSQL)
-- [ ] **Étape 6** — Beat detector automatique (script TS)
+- [x] **Étape 6** — Beat detector automatique (script TS)
 - [ ] **Étape 7** — Intégration finale + polish
 
 ## 🧰 Conventions de code
