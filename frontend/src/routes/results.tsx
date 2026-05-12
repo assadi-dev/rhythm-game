@@ -3,19 +3,22 @@ import { useState } from 'react';
 
 export const Route = createFileRoute('/results')({
   validateSearch: (search: Record<string, unknown>) => ({
-    score:    Number(search.score)    || 0,
-    maxCombo: Number(search.maxCombo) || 0,
-    accuracy: Number(search.accuracy) || 0,
-    rank:     typeof search.rank    === 'string' ? search.rank    : 'D',
-    songId:   typeof search.songId  === 'string' ? search.songId  : 'demo',
-    chartId:  typeof search.chartId === 'string' ? search.chartId : 'demo-normal',
+    score:      Number(search.score)    || 0,
+    maxCombo:   Number(search.maxCombo) || 0,
+    accuracy:   Number(search.accuracy) || 0,
+    rank:       typeof search.rank       === 'string' ? search.rank       : 'D',
+    songId:     typeof search.songId     === 'string' ? search.songId     : 'demo',
+    chartId:    typeof search.chartId    === 'string' ? search.chartId    : 'demo-normal',
+    difficulty: (['EASY', 'NORMAL', 'HARD'].includes(String(search.difficulty))
+      ? search.difficulty
+      : 'NORMAL') as 'EASY' | 'NORMAL' | 'HARD',
   }),
   component: ResultsPage,
 });
 
 function ResultsPage() {
   const navigate = useNavigate();
-  const { score, maxCombo, accuracy, rank, songId, chartId } = Route.useSearch();
+  const { score, maxCombo, accuracy, rank, songId, chartId, difficulty } = Route.useSearch();
   const rankStyle = RANK_STYLES[rank] ?? RANK_STYLES['D'];
 
   const [playerName,  setPlayerName]  = useState('');
@@ -111,7 +114,7 @@ function ResultsPage() {
       <div className="flex flex-wrap justify-center gap-4">
         <button
           type="button"
-          onClick={() => void navigate({ to: '/game', search: { songId, chartId } })}
+          onClick={() => void navigate({ to: '/game', search: { songId, chartId, difficulty } })}
           className="
             font-display border-vapor-pink text-vapor-pink
             hover:bg-vapor-pink hover:text-vapor-bg

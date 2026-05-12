@@ -7,10 +7,11 @@ import type { GameScene, GameCompleteData } from '@/game/scenes/GameScene';
 import { PauseMenu } from './PauseMenu';
 import { SettingsModal } from './SettingsModal';
 import { getSettings, displayCode, type GameSettings } from '@/store/settings';
+import type { Difficulty } from '@/game/beatGenerator';
 
-type Props = { songId: string; chartId: string };
+type Props = { songId: string; chartId: string; difficulty: Difficulty };
 
-export function GameCanvas({ songId, chartId }: Props) {
+export function GameCanvas({ songId, chartId, difficulty }: Props) {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef      = useRef<Phaser.Game | null>(null);
@@ -38,7 +39,7 @@ export function GameCanvas({ songId, chartId }: Props) {
   // Initialise Phaser + abonnement aux événements
   useEffect(() => {
     if (!containerRef.current || gameRef.current) return;
-    const game = createPhaserGame(containerRef.current, chartId);
+    const game = createPhaserGame(containerRef.current, chartId, difficulty);
     gameRef.current = game;
 
     game.events.on('game-complete', setResult);
@@ -63,7 +64,7 @@ export function GameCanvas({ songId, chartId }: Props) {
     if (!result) return;
     void navigate({
       to: '/results',
-      search: { score: result.score, maxCombo: result.maxCombo, accuracy: result.accuracy, rank: result.rank, songId, chartId },
+      search: { score: result.score, maxCombo: result.maxCombo, accuracy: result.accuracy, rank: result.rank, songId, chartId, difficulty },
     });
   }, [result, navigate, songId, chartId]);
 

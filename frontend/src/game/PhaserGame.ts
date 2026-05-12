@@ -1,12 +1,17 @@
 import Phaser from 'phaser';
 import { GameScene } from './scenes/GameScene';
+import type { Difficulty } from './beatGenerator';
 
-export function createPhaserGame(parent: HTMLElement, chartId: string): Phaser.Game {
+export function createPhaserGame(
+  parent:     HTMLElement,
+  chartId:    string,
+  difficulty: Difficulty = 'NORMAL',
+): Phaser.Game {
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,
     backgroundColor: '#1a0b2e',
-    scene: [new GameScene(chartId)],
+    scene: [new GameScene(chartId, difficulty)],
     scale: {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,

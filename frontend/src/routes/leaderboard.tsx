@@ -113,7 +113,7 @@ function LeaderboardPage() {
         {songId && (
           <button
             type="button"
-            onClick={() => void navigate({ to: '/game', search: { songId, chartId: songId + '-normal' } })}
+            onClick={() => void navigate({ to: '/game', search: { songId, chartId: songId + '-normal', difficulty: 'NORMAL' } })}
             className="
               font-display border-vapor-pink text-vapor-pink
               hover:bg-vapor-pink hover:text-vapor-bg

@@ -1,7 +1,13 @@
 export type Difficulty = 'EASY' | 'NORMAL' | 'HARD';
 export type NoteRow    = { lane: number; time: number };
 
-// LCG déterministe — permet seed reproductible
+// Lanes actives par difficulté (cohérent avec le frontend)
+export const ACTIVE_LANES: Record<Difficulty, readonly number[]> = {
+  EASY:   [0, 3],       // 2 lanes : ← →
+  NORMAL: [0, 1, 3],    // 3 lanes : ← ↓ →
+  HARD:   [0, 1, 2, 3], // 4 lanes : ← ↓ ↑ →
+};
+
 function createRng(seed: number) {
   let s = seed >>> 0;
   return (): number => {
@@ -10,16 +16,21 @@ function createRng(seed: number) {
   };
 }
 
-function pickLane(rng: () => number, prevLane: number, usage: number[]): number {
-  const weights = usage.map((u, i) => {
-    if (i === prevLane) return 0.05;
+function pickActiveIdx(
+  rng:         () => number,
+  prevIdx:     number,
+  usage:       number[],
+  activeLanes: readonly number[],
+): number {
+  const w = usage.map((u, i) => {
+    if (i === prevIdx) return 0.05;
     const base = 1 / (u + 1);
-    return Math.abs(i - prevLane) === 1 ? base * 0.6 : base;
+    return Math.abs(i - prevIdx) === 1 ? base * 0.6 : base;
   });
-  const total = weights.reduce((a, b) => a + b, 0);
+  const total = w.reduce((a, b) => a + b, 0);
   let r = rng() * total;
-  for (let i = 0; i < 4; i++) {
-    r -= weights[i];
+  for (let i = 0; i < activeLanes.length; i++) {
+    r -= w[i];
     if (r <= 0) return i;
   }
   return 0;
@@ -31,11 +42,9 @@ export function generateNotes(
   difficulty: Difficulty,
   seed?:      number,
 ): NoteRow[] {
-  const beat = 60 / bpm;
-
-  // Résolution de la grille (noire pour EASY, croche pour NORMAL/HARD)
-  const step = difficulty === 'EASY' ? beat : beat / 2;
-
+  const activeLanes = ACTIVE_LANES[difficulty];
+  const beat  = 60 / bpm;
+  const step  = difficulty === 'EASY' ? beat : beat / 2;
   const density: Record<Difficulty, { strong: number; weak: number }> = {
     EASY:   { strong: 0.70, weak: 0.00 },
     NORMAL: { strong: 0.82, weak: 0.38 },
@@ -43,28 +52,25 @@ export function generateNotes(
   };
   const d = density[difficulty];
 
-  // Intro : ~2 secondes avant la première note
   const startTime = Math.ceil(2 / step) * step;
   const rng       = createRng(seed ?? Math.floor(Math.random() * 0xffffffff));
-  const notes: NoteRow[]  = [];
-  const laneUsage: number[] = [0, 0, 0, 0];
-  let prevLane = 0;
+  const notes: NoteRow[] = [];
+  const usage = activeLanes.map(() => 0);
+  let prevIdx = 0;
   let t = startTime;
 
   while (t < duration - beat) {
     const beatPhase = (t / beat) % 1;
     const isStrong  = beatPhase < 0.05 || beatPhase > 0.95;
-    const prob      = isStrong ? d.strong : d.weak;
-
-    if (rng() < prob) {
-      const lane = pickLane(rng, prevLane, laneUsage);
+    if (rng() < (isStrong ? d.strong : d.weak)) {
+      const idx  = pickActiveIdx(rng, prevIdx, usage, activeLanes);
+      const lane = activeLanes[idx];
       notes.push({ lane, time: Math.round(t * 1000) / 1000 });
-      laneUsage[lane]++;
-      prevLane = lane;
+      usage[idx]++;
+      prevIdx = idx;
     }
     t += step;
   }
-
   return notes;
 }
 

@@ -1,10 +1,17 @@
-// Génération de notes rythmiques — même algorithme que tools/beat-detector.ts
-// Utilisé pour remplir dynamiquement un chart sur toute la durée audio réelle.
-
 export type Difficulty = 'EASY' | 'NORMAL' | 'HARD';
 export type NoteData   = { lane: 0 | 1 | 2 | 3; time: number };
 
-// LCG déterministe — même seed = même chart (cohérence entre tentatives)
+// Lanes actives par difficulté (mappées aux touches fléchées)
+// EASY   : ←  →       (2 touches, les plus éloignées = plus simple)
+// NORMAL : ← ↓  →     (3 touches)
+// HARD   : ← ↓ ↑ →    (4 touches, toutes actives)
+export const ACTIVE_LANES: Record<Difficulty, readonly (0 | 1 | 2 | 3)[]> = {
+  EASY:   [0, 3],
+  NORMAL: [0, 1, 3],
+  HARD:   [0, 1, 2, 3],
+};
+
+// LCG déterministe — même seed = même chart
 function createRng(seed: number) {
   let s = seed >>> 0;
   return (): number => {
@@ -13,19 +20,29 @@ function createRng(seed: number) {
   };
 }
 
-function pickLane(rng: () => number, prev: number, usage: number[]): 0 | 1 | 2 | 3 {
+// Choisit un index dans activeLanes en évitant répétitions et surcharge d'une lane
+function pickActiveIdx(
+  rng:         () => number,
+  prevIdx:     number,
+  usage:       number[],
+  activeLanes: readonly (0 | 1 | 2 | 3)[],
+): number {
   const w = usage.map((u, i) => {
-    if (i === prev) return 0.05;
-    const b = 1 / (u + 1);
-    return Math.abs(i - prev) === 1 ? b * 0.6 : b;
+    if (i === prevIdx) return 0.05;
+    const adjacent = Math.abs(i - prevIdx) === 1;
+    const base = 1 / (u + 1);
+    return adjacent ? base * 0.6 : base;
   });
   const total = w.reduce((a, b) => a + b, 0);
   let r = rng() * total;
-  for (let i = 0; i < 4; i++) { r -= w[i]; if (r <= 0) return i as 0|1|2|3; }
+  for (let i = 0; i < activeLanes.length; i++) {
+    r -= w[i];
+    if (r <= 0) return i;
+  }
   return 0;
 }
 
-// Graine déterministe dérivée du chartId (même chanson = même chart)
+// Graine déterministe dérivée du chartId
 export function chartSeed(chartId: string): number {
   let h = 5381;
   for (const c of chartId) h = (Math.imul(h, 31) + c.charCodeAt(0)) | 0;
@@ -38,29 +55,31 @@ export function generateNotes(
   difficulty: Difficulty,
   seed:       number,
 ): NoteData[] {
-  const beat = 60 / bpm;
-  const step = difficulty === 'EASY' ? beat : beat / 2;
+  const activeLanes = ACTIVE_LANES[difficulty];
+  const beat  = 60 / bpm;
+  const step  = difficulty === 'EASY' ? beat : beat / 2;
   const density = {
     EASY:   { strong: 0.70, weak: 0.00 },
     NORMAL: { strong: 0.82, weak: 0.38 },
     HARD:   { strong: 0.93, weak: 0.65 },
   }[difficulty];
 
-  const startTime = Math.ceil(2 / step) * step; // ~2 s d'intro
+  const startTime = Math.ceil(2 / step) * step;
   const rng       = createRng(seed);
   const notes: NoteData[] = [];
-  const usage = [0, 0, 0, 0];
-  let prev = 0;
-  let t    = startTime;
+  const usage = activeLanes.map(() => 0);
+  let prevIdx = 0;
+  let t = startTime;
 
   while (t < duration - beat) {
     const phase    = (t / beat) % 1;
     const isStrong = phase < 0.05 || phase > 0.95;
     if (rng() < (isStrong ? density.strong : density.weak)) {
-      const lane = pickLane(rng, prev, usage);
+      const idx  = pickActiveIdx(rng, prevIdx, usage, activeLanes);
+      const lane = activeLanes[idx];
       notes.push({ lane, time: Math.round(t * 1000) / 1000 });
-      usage[lane]++;
-      prev = lane;
+      usage[idx]++;
+      prevIdx = idx;
     }
     t += step;
   }

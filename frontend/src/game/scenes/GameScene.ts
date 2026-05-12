@@ -5,7 +5,7 @@ import { ScoreSystem } from '../systems/ScoreSystem';
 import type { AudioEngine } from '../AudioEngine';
 import type { NoteData } from '../../types/chart';
 import { getSettings, displayCode } from '../../store/settings';
-import { generateNotes, chartSeed, type Difficulty } from '../beatGenerator';
+import { generateNotes, chartSeed, ACTIVE_LANES, type Difficulty } from '../beatGenerator';
 import {
   LANE_COUNT, NOTE_SPEED, JUDGMENT_Y_RATIO,
   C_BG, C_CYAN, C_WHITE, LANE_COLORS,
@@ -56,9 +56,10 @@ export class GameScene extends Phaser.Scene {
   private multiplierText!:  Phaser.GameObjects.Text;
   private keyLabelTexts:    Phaser.GameObjects.Text[] = [];
 
-  constructor(chartId = 'demo-normal') {
+  constructor(chartId = 'demo-normal', difficulty: Difficulty = 'NORMAL') {
     super({ key: 'GameScene' });
-    this.chartId = chartId;
+    this.chartId         = chartId;
+    this.chartDifficulty = difficulty;
   }
 
   preload(): void {
@@ -142,9 +143,8 @@ export class GameScene extends Phaser.Scene {
       notes?: NoteData[]; title?: string; bpm?: number; level?: string;
     } | null;
 
-    // Métadonnées utilisées dans start() pour regénérer les notes sur la durée réelle
-    this.chartBpm        = raw?.bpm ?? 120;
-    this.chartDifficulty = (['EASY', 'HARD'].includes(raw?.level ?? '') ? raw!.level : 'NORMAL') as Difficulty;
+    // BPM depuis le chart — la difficulté vient du constructeur (choix joueur)
+    this.chartBpm = raw?.bpm ?? 120;
 
     // Notes initiales (courtes) — remplacées dans start() si audio disponible
     this.originalNotes = raw?.notes ?? makeDemoChart();
@@ -216,14 +216,20 @@ export class GameScene extends Phaser.Scene {
 
   private drawKeyLabels(height: number): void {
     const { keys } = getSettings();
-    const labels = [keys.lane0, keys.lane1, keys.lane2, keys.lane3].map(displayCode);
+    const allKeys    = [keys.lane0, keys.lane1, keys.lane2, keys.lane3];
+    const activeLanes = ACTIVE_LANES[this.chartDifficulty];
+
     for (let i = 0; i < LANE_COUNT; i++) {
+      const isActive = activeLanes.includes(i as 0 | 1 | 2 | 3);
+      const label    = isActive ? displayCode(allKeys[i]!) : '·';
       const t = this.add
-        .text(this.laneX[i], height * 0.93, labels[i]!, {
+        .text(this.laneX[i], height * 0.93, label, {
           fontFamily: '"VT323"', fontSize: '36px',
           color: '#' + LANE_COLORS[i].toString(16).padStart(6, '0'),
         })
-        .setOrigin(0.5, 0.5).setAlpha(0.7).setDepth(2);
+        .setOrigin(0.5, 0.5)
+        .setAlpha(isActive ? 0.75 : 0.18)
+        .setDepth(2);
       this.keyLabelTexts.push(t);
     }
   }
