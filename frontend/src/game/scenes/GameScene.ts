@@ -172,7 +172,7 @@ export class GameScene extends Phaser.Scene {
     for (let i = this.notes.length - 1; i >= 0; i--) {
       const note = this.notes[i];
       note.setY(this.judgmentY - (note.targetTime - t) * NOTE_SPEED);
-      if (t - note.targetTime > 0.133) {
+      if (t - note.targetTime > 0.250) {
         this.scoring.record('MISS');
         this.flashJudgment('MISS');
         this.notes.splice(i, 1);
@@ -291,7 +291,7 @@ export class GameScene extends Phaser.Scene {
     for (const note of this.notes) {
       if (note.lane !== lane) continue;
       const delta = Math.abs(note.targetTime - t);
-      if (delta <= 0.133 && delta < bestDelta) { best = note; bestDelta = delta; }
+      if (delta <= 0.250 && delta < bestDelta) { best = note; bestDelta = delta; }
     }
 
     if (best) {
