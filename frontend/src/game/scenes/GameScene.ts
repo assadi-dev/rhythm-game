@@ -16,7 +16,7 @@ export type GameCompleteData = {
   rank: string;
 };
 
-// Chart de démo : 32 notes à BPM 120, départ à t=1.5s
+// Chart de démo : fallback si l'API est hors-ligne
 function makeDemoChart(): NoteData[] {
   const beat = 60 / 120;
   const pattern: Array<0 | 1 | 2 | 3> = [
@@ -24,6 +24,15 @@ function makeDemoChart(): NoteData[] {
     0, 1, 2, 3,  2, 0, 3, 1,  0, 2, 1, 3,  1, 0, 3, 2,
   ];
   return pattern.map((lane, i) => ({ lane, time: 1.5 + i * beat }));
+}
+
+// Couleur de combo selon le multiplicateur
+function comboColor(multiplier: number): string {
+  if (multiplier >= 2.5) return '#01cdfe'; // ×2.5 — cyan
+  if (multiplier >= 2.0) return '#ff71ce'; // ×2.0 — pink
+  if (multiplier >= 1.5) return '#b967ff'; // ×1.5 — purple
+  if (multiplier >= 1.1) return '#fffb96'; // ×1.1 — yellow
+  return '#fff8fc';
 }
 
 export class GameScene extends Phaser.Scene {
@@ -39,9 +48,10 @@ export class GameScene extends Phaser.Scene {
   private ended = false;
 
   // HUD
-  private scoreText!: Phaser.GameObjects.Text;
-  private comboText!: Phaser.GameObjects.Text;
-  private judgeText!: Phaser.GameObjects.Text;
+  private scoreText!:      Phaser.GameObjects.Text;
+  private comboText!:      Phaser.GameObjects.Text;
+  private judgeText!:      Phaser.GameObjects.Text;
+  private multiplierText!: Phaser.GameObjects.Text;
 
   constructor(chartId = 'demo-normal') {
     super({ key: 'GameScene' });
@@ -49,7 +59,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // Charge depuis l'API backend — fallback sur le fichier statique si hors-ligne
     this.load.json('chart', `/api/charts/${this.chartId}`);
   }
 
@@ -57,7 +66,6 @@ export class GameScene extends Phaser.Scene {
     this._audio = audio;
   }
 
-  // GameCanvas appelle audio.play() ou audio.markStart() AVANT d'appeler start()
   start(): void {
     this.started = true;
   }
@@ -72,6 +80,7 @@ export class GameScene extends Phaser.Scene {
     this.scoreText.setText('00000000');
     this.comboText.setText('');
     this.judgeText.setAlpha(0);
+    this.multiplierText.setText('');
   }
 
   create(): void {
@@ -86,9 +95,27 @@ export class GameScene extends Phaser.Scene {
     this.createHUD(width);
     this.setupInput();
 
-    const raw = this.cache.json.get('chart') as { notes?: NoteData[] } | null;
+    const raw = this.cache.json.get('chart') as {
+      notes?: NoteData[]; title?: string; bpm?: number;
+    } | null;
     this.originalNotes = raw?.notes ?? makeDemoChart();
     this.pending = this.originalNotes.map(n => ({ ...n }));
+
+    // Titre + BPM dans le coin supérieur gauche
+    const title  = raw?.title ?? 'DEMO TRACK';
+    const bpm    = raw?.bpm   ?? 120;
+    this.add
+      .text(16, 16, `${title}`, {
+        fontFamily: '"VT323"', fontSize: '26px', color: '#ff71ce',
+      })
+      .setAlpha(0.5)
+      .setDepth(10);
+    this.add
+      .text(16, 44, `${bpm} BPM`, {
+        fontFamily: '"Space Mono"', fontSize: '11px', color: '#01cdfe',
+      })
+      .setAlpha(0.4)
+      .setDepth(10);
   }
 
   private drawLanes(width: number, height: number): void {
@@ -123,52 +150,58 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createHUD(width: number): void {
-    this.add
-      .text(16, 16, 'NEON TEMPO', {
-        fontFamily: '"VT323"',
-        fontSize: '28px',
-        color: '#ff71ce',
-      })
-      .setAlpha(0.4)
-      .setDepth(10);
-
+    // Score — coin supérieur droit
     this.scoreText = this.add
       .text(width - 16, 16, '00000000', {
-        fontFamily: '"VT323"',
-        fontSize: '36px',
-        color: '#fff8fc',
+        fontFamily: '"VT323"', fontSize: '36px', color: '#fff8fc',
       })
       .setOrigin(1, 0)
       .setDepth(10);
 
+    // Multiplicateur — sous le score
+    this.multiplierText = this.add
+      .text(width - 16, 56, '', {
+        fontFamily: '"VT323"', fontSize: '22px', color: '#fffb96',
+      })
+      .setOrigin(1, 0)
+      .setAlpha(0.8)
+      .setDepth(10);
+
+    // Combo — centré au-dessus de la ligne de jugement
     this.comboText = this.add
       .text(width / 2, this.judgmentY - 90, '', {
-        fontFamily: '"VT323"',
-        fontSize: '60px',
-        color: '#fffb96',
+        fontFamily: '"VT323"', fontSize: '60px', color: '#fff8fc',
       })
       .setOrigin(0.5, 1)
       .setDepth(10);
 
+    // Jugement — centré entre combo et ligne
     this.judgeText = this.add
       .text(width / 2, this.judgmentY - 35, '', {
-        fontFamily: '"VT323"',
-        fontSize: '44px',
-        color: '#01cdfe',
+        fontFamily: '"VT323"', fontSize: '44px', color: '#01cdfe',
       })
       .setOrigin(0.5, 1)
       .setAlpha(0)
+      .setDepth(10);
+
+    // Hint ESC
+    this.add
+      .text(width / 2, 12, 'ESC — QUITTER', {
+        fontFamily: '"Space Mono"', fontSize: '9px', color: '#fff8fc',
+      })
+      .setOrigin(0.5, 0)
+      .setAlpha(0.15)
       .setDepth(10);
   }
 
   private setupInput(): void {
     const kb = this.input.keyboard!;
-    kb.on('keydown-D', () => { this.handleInput(0); });
-    kb.on('keydown-F', () => { this.handleInput(1); });
-    kb.on('keydown-J', () => { this.handleInput(2); });
-    kb.on('keydown-K', () => { this.handleInput(3); });
+    kb.on('keydown-D',   () => { this.handleInput(0); });
+    kb.on('keydown-F',   () => { this.handleInput(1); });
+    kb.on('keydown-J',   () => { this.handleInput(2); });
+    kb.on('keydown-K',   () => { this.handleInput(3); });
+    kb.on('keydown-ESC', () => { this.game.events.emit('game-exit'); });
 
-    // Zones tactiles — divise l'écran en 4 bandes verticales
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => {
       const lane = Math.min(3, Math.floor(p.x / (this.scale.width / LANE_COUNT))) as 0 | 1 | 2 | 3;
       this.handleInput(lane);
@@ -178,6 +211,9 @@ export class GameScene extends Phaser.Scene {
   private handleInput(lane: 0 | 1 | 2 | 3): void {
     if (!this.started || this.ended) return;
     const t = this._audio.currentTime;
+
+    // Flash de lane systématique (feedback sur toute touche)
+    this.flashLane(lane);
 
     let best: Note | null = null;
     let bestDelta = Infinity;
@@ -195,8 +231,40 @@ export class GameScene extends Phaser.Scene {
       const j = judge(deltaMs);
       this.scoring.record(j);
       this.flashJudgment(j);
+      this.createHitEffect(lane, LANE_COLORS[lane]);
       this.removeNote(best);
     }
+  }
+
+  // Éclair de lane : rectangle translucide qui disparaît vite
+  private flashLane(lane: 0 | 1 | 2 | 3): void {
+    const laneW = this.scale.width / LANE_COUNT;
+    const rect  = this.add
+      .rectangle(this.laneX[lane], this.scale.height / 2, laneW - 2, this.scale.height, LANE_COLORS[lane], 0.18)
+      .setDepth(4);
+    this.tweens.add({
+      targets: rect, alpha: 0, duration: 140, ease: 'Power2',
+      onComplete: () => rect.destroy(),
+    });
+  }
+
+  // Anneau qui s'élargit sur la ligne de jugement
+  private createHitEffect(lane: 0 | 1 | 2 | 3, color: number): void {
+    const ring = this.add
+      .arc(this.laneX[lane], this.judgmentY, 16, 0, 360, false, color, 0.75)
+      .setDepth(5);
+    this.tweens.add({
+      targets: ring, scaleX: 4, scaleY: 4, alpha: 0, duration: 320, ease: 'Power2',
+      onComplete: () => ring.destroy(),
+    });
+    // Flash horizontal court
+    const bar = this.add
+      .rectangle(this.laneX[lane], this.judgmentY, 76, 6, color, 0.7)
+      .setDepth(5);
+    this.tweens.add({
+      targets: bar, alpha: 0, scaleX: 2, duration: 180, ease: 'Power2',
+      onComplete: () => bar.destroy(),
+    });
   }
 
   private flashJudgment(j: Judgment): void {
@@ -208,11 +276,8 @@ export class GameScene extends Phaser.Scene {
       .setScale(1.25);
     this.tweens.add({
       targets: this.judgeText,
-      alpha: 0,
-      scaleX: 1,
-      scaleY: 1,
-      duration: 500,
-      ease: 'Power2',
+      alpha: 0, scaleX: 1, scaleY: 1,
+      duration: 500, ease: 'Power2',
     });
   }
 
@@ -228,14 +293,12 @@ export class GameScene extends Phaser.Scene {
     const t = this._audio.currentTime;
     const approachTime = this.judgmentY / NOTE_SPEED;
 
-    // Spawn les notes qui entrent dans la fenêtre visible
     while (this.pending.length > 0 && this.pending[0].time <= t + approachTime) {
-      const nd = this.pending.shift()!;
+      const nd   = this.pending.shift()!;
       const note = new Note(this, this.laneX[nd.lane], nd.lane, nd.time, LANE_COLORS[nd.lane]);
       this.notes.push(note);
     }
 
-    // Mise à jour position + auto-miss
     for (let i = this.notes.length - 1; i >= 0; i--) {
       const note = this.notes[i];
       note.setY(this.judgmentY - (note.targetTime - t) * NOTE_SPEED);
@@ -250,9 +313,15 @@ export class GameScene extends Phaser.Scene {
 
     // HUD
     this.scoreText.setText(this.scoring.score.toString().padStart(8, '0'));
-    this.comboText.setText(this.scoring.combo >= 2 ? `${this.scoring.combo}×` : '');
 
-    // Fin de partie : plus aucune note en attente ni à l'écran
+    const combo = this.scoring.combo;
+    const mult  = this.scoring.multiplier;
+    this.comboText
+      .setText(combo >= 2 ? `${combo}×` : '')
+      .setColor(comboColor(mult));
+
+    this.multiplierText.setText(mult > 1 ? `×${mult.toFixed(1)} BONUS` : '');
+
     if (this.pending.length === 0 && this.notes.length === 0) {
       this.endGame();
     }
@@ -260,12 +329,11 @@ export class GameScene extends Phaser.Scene {
 
   private endGame(): void {
     this.ended = true;
-    const data: GameCompleteData = {
-      score: this.scoring.score,
+    this.game.events.emit('game-complete', {
+      score:    this.scoring.score,
       maxCombo: this.scoring.maxCombo,
       accuracy: this.scoring.accuracy,
-      rank: this.scoring.rank,
-    };
-    this.game.events.emit('game-complete', data);
+      rank:     this.scoring.rank,
+    } satisfies GameCompleteData);
   }
 }

@@ -34,8 +34,10 @@ export function GameCanvas({ songId, chartId }: Props) {
     const game = createPhaserGame(containerRef.current, chartId);
     gameRef.current = game;
     game.events.on('game-complete', setResult);
+    game.events.on('game-exit', () => { void navigate({ to: '/songs' }); });
     return () => {
       game.events.off('game-complete', setResult);
+      game.events.removeAllListeners('game-exit');
       game.destroy(true);
       gameRef.current = null;
       audioRef.current.destroy();

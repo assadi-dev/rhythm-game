@@ -113,7 +113,7 @@ GET  /api/leaderboard/song/:id  → top 100 par musique
 - [x] **Étape 4** — Pages React (sélection musique, résultats, leaderboard)
 - [x] **Étape 5** — Backend complet (Drizzle schema, routes, persistance PostgreSQL)
 - [x] **Étape 6** — Beat detector automatique (script TS)
-- [ ] **Étape 7** — Intégration finale + polish
+- [x] **Étape 7** — Intégration finale + polish
 
 ## 🧰 Conventions de code
 

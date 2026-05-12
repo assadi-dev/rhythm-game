@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { MOCK_SONGS } from '@/api/songs';
+import { useEffect, useState } from 'react';
+import { MOCK_SONGS, fetchSongs } from '@/api/songs';
 import type { SongInfo, DifficultyInfo } from '@/types/song';
 
 export const Route = createFileRoute('/songs')({
@@ -8,6 +9,14 @@ export const Route = createFileRoute('/songs')({
 
 function SongsPage() {
   const navigate = useNavigate();
+  const [songs,   setSongs]   = useState<SongInfo[]>(MOCK_SONGS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSongs()
+      .then(setSongs)
+      .finally(() => setLoading(false));
+  }, []);
 
   function handleSelect(song: SongInfo, chartId: string) {
     if (!song.available) return;
@@ -26,9 +35,15 @@ function SongsPage() {
 
       {/* Song list */}
       <div className="w-full max-w-2xl flex flex-col gap-4">
-        {MOCK_SONGS.map((song) => (
-          <SongCard key={song.id} song={song} onSelect={(s, cId) => handleSelect(s, cId)} />
-        ))}
+        {loading ? (
+          <p className="font-display text-vapor-white/30 text-center py-10 text-2xl tracking-widest animate-pulse-slow">
+            LOADING...
+          </p>
+        ) : (
+          songs.map((song) => (
+            <SongCard key={song.id} song={song} onSelect={(s, cId) => handleSelect(s, cId)} />
+          ))
+        )}
       </div>
 
       {/* Back */}
