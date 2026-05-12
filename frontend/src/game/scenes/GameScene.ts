@@ -16,14 +16,12 @@ export type GameCompleteData = {
   rank: string;
 };
 
-// Chart de démo : fallback si l'API est hors-ligne
+// Chart de démo : fallback si l'API est hors-ligne — 1 note / seconde, 20 notes
 function makeDemoChart(): NoteData[] {
-  const beat = 60 / 120;
   const pattern: Array<0 | 1 | 2 | 3> = [
-    0, 2, 1, 3,  0, 1, 2, 3,  0, 3, 1, 2,  0, 2, 3, 1,
-    0, 1, 2, 3,  2, 0, 3, 1,  0, 2, 1, 3,  1, 0, 3, 2,
+    0, 2, 1, 3,  0, 1, 2, 3,  0, 3, 1, 2,  0, 2, 3, 1,  0, 1, 2, 3,
   ];
-  return pattern.map((lane, i) => ({ lane, time: 1.5 + i * beat }));
+  return pattern.map((lane, i) => ({ lane, time: 2.0 + i * 1.0 }));
 }
 
 // Couleur de combo selon le multiplicateur

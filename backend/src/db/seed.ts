@@ -6,23 +6,18 @@ import 'dotenv/config';
 import { db } from './index.js';
 import { songs, charts } from './schema.js';
 
+// 1 note / seconde — espacement confortable pour la démo
 const DEMO_NOTES = [
-  { lane: 0, time: 1.5 },  { lane: 2, time: 2.0 },
-  { lane: 1, time: 2.5 },  { lane: 3, time: 3.0 },
-  { lane: 0, time: 3.5 },  { lane: 1, time: 4.0 },
-  { lane: 2, time: 4.5 },  { lane: 3, time: 5.0 },
-  { lane: 0, time: 5.5 },  { lane: 3, time: 6.0 },
-  { lane: 1, time: 6.5 },  { lane: 2, time: 7.0 },
-  { lane: 0, time: 7.5 },  { lane: 2, time: 8.0 },
-  { lane: 3, time: 8.5 },  { lane: 1, time: 9.0 },
-  { lane: 0, time: 9.5 },  { lane: 1, time: 10.0 },
-  { lane: 2, time: 10.5 }, { lane: 3, time: 11.0 },
-  { lane: 2, time: 11.5 }, { lane: 0, time: 12.0 },
-  { lane: 3, time: 12.5 }, { lane: 1, time: 13.0 },
-  { lane: 0, time: 13.5 }, { lane: 2, time: 14.0 },
-  { lane: 1, time: 14.5 }, { lane: 3, time: 15.0 },
-  { lane: 1, time: 15.5 }, { lane: 0, time: 16.0 },
-  { lane: 3, time: 16.5 }, { lane: 2, time: 17.0 },
+  { lane: 0, time: 2.0 },  { lane: 2, time: 3.0 },
+  { lane: 1, time: 4.0 },  { lane: 3, time: 5.0 },
+  { lane: 0, time: 6.0 },  { lane: 1, time: 7.0 },
+  { lane: 2, time: 8.0 },  { lane: 3, time: 9.0 },
+  { lane: 0, time: 10.0 }, { lane: 3, time: 11.0 },
+  { lane: 1, time: 12.0 }, { lane: 2, time: 13.0 },
+  { lane: 0, time: 14.0 }, { lane: 2, time: 15.0 },
+  { lane: 3, time: 16.0 }, { lane: 1, time: 17.0 },
+  { lane: 0, time: 18.0 }, { lane: 1, time: 19.0 },
+  { lane: 2, time: 20.0 }, { lane: 3, time: 21.0 },
 ];
 
 async function seed() {

@@ -1,5 +1,5 @@
 export const LANE_COUNT = 4;
-export const NOTE_SPEED = 300; // pixels / seconde
+export const NOTE_SPEED = 200; // pixels / seconde
 export const NOTE_W = 80;
 export const NOTE_H = 22;
 export const JUDGMENT_Y_RATIO = 0.85;

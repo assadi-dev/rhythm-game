@@ -6,6 +6,7 @@ import { songsRouter }       from './routes/songs.js';
 import { chartsRouter }      from './routes/charts.js';
 import { scoresRouter }      from './routes/scores.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
+import { uploadRouter }      from './routes/upload.js';
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const assetsDir  = path.join(__dirname, '../assets');
@@ -30,6 +31,7 @@ export function createApp(): Express {
   });
 
   // ---- Routes API ----
+  app.use('/api/upload',      uploadRouter);
   app.use('/api/songs',       songsRouter);
   app.use('/api/charts',      chartsRouter);
   app.use('/api/scores',      scoresRouter);
