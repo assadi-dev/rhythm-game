@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 
 export const Route = createFileRoute('/leaderboard')({
   validateSearch: (search: Record<string, unknown>) => ({
-    songId: typeof search.songId === 'string' ? search.songId : '',
+    // songId optionnel : absent ou '' → classement global
+    songId: typeof search.songId === 'string' && search.songId ? search.songId : undefined,
   }),
   component: LeaderboardPage,
 });
@@ -31,10 +32,7 @@ function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const url = songId
-      ? `/api/leaderboard/song/${songId}`
-      : '/api/leaderboard/global';
-
+    const url = songId ? `/api/leaderboard/song/${songId}` : '/api/leaderboard/global';
     fetch(url)
       .then(r => r.json() as Promise<Entry[]>)
       .then(data => setEntries(Array.isArray(data) ? data : []))
@@ -42,7 +40,9 @@ function LeaderboardPage() {
       .finally(() => setLoading(false));
   }, [songId]);
 
-  const pageTitle = songId ? (entries[0]?.songTitle ?? songId.toUpperCase()) : 'GLOBAL';
+  const pageTitle = songId
+    ? (entries[0]?.songTitle ?? songId.toUpperCase())
+    : 'GLOBAL';
 
   return (
     <div className="flex min-h-screen flex-col items-center px-4 py-12">

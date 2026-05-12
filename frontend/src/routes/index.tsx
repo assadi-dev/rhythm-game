@@ -78,7 +78,7 @@ function HomePage() {
       {/* Leaderboard */}
       <button
         type="button"
-        onClick={() => void navigate({ to: '/leaderboard', search: { songId: '' } })}
+        onClick={() => void navigate({ to: '/leaderboard', search: { songId: undefined } })}
         className="
           font-display border-vapor-purple text-vapor-purple hover:bg-vapor-purple hover:text-vapor-bg
           mt-4 border px-12 py-3 text-xl tracking-widest
