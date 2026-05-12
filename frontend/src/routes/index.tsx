@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import { SettingsModal } from '@/components/SettingsModal';
+import { saveSettings, type GameSettings } from '@/store/settings';
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -13,30 +15,45 @@ type PingResponse = {
 
 function HomePage() {
   const navigate = useNavigate();
-  const [apiStatus, setApiStatus] = useState<'checking' | 'ok' | 'fail'>(
-    'checking'
-  );
-  const [serverTime, setServerTime] = useState<string | null>(null);
+  const [apiStatus,    setApiStatus]    = useState<'checking' | 'ok' | 'fail'>('checking');
+  const [serverTime,   setServerTime]   = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
-  // Test simple : on ping le backend pour vérifier que tout est connecté
   useEffect(() => {
     fetch('/api/ping')
-      .then((r) => r.json() as Promise<PingResponse>)
-      .then((data) => {
-        setApiStatus(data.ok ? 'ok' : 'fail');
-        setServerTime(data.timestamp);
-      })
+      .then(r => r.json() as Promise<PingResponse>)
+      .then(data => { setApiStatus(data.ok ? 'ok' : 'fail'); setServerTime(data.timestamp); })
       .catch(() => setApiStatus('fail'));
   }, []);
 
+  function handleSaveSettings(s: GameSettings) {
+    saveSettings(s);
+    setShowSettings(false);
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      {/* Kanji décoratif en haut */}
+
+      {/* Bouton paramètres — coin supérieur droit */}
+      <button
+        type="button"
+        onClick={() => setShowSettings(true)}
+        title="Paramètres"
+        className="
+          font-display fixed top-6 right-6 z-20
+          text-vapor-white/30 hover:text-vapor-cyan
+          text-2xl transition-colors duration-200
+        "
+      >
+        ⚙
+      </button>
+
+      {/* Kanji décoratif */}
       <p className="font-jp text-vapor-cyan/60 mb-4 text-2xl tracking-widest">
         リズム・ゲーム
       </p>
 
-      {/* Titre principal */}
+      {/* Titre */}
       <h1 className="font-display text-neon-pink animate-flicker mb-2 text-7xl md:text-9xl">
         NEON TEMPO
       </h1>
@@ -45,38 +62,43 @@ function HomePage() {
         ▸ A R C A D E   R H Y T H M ◂
       </p>
 
-      {/* Bouton principal */}
+      {/* PRESS START */}
       <button
         type="button"
+        onClick={() => void navigate({ to: '/songs' })}
         className="
           font-display border-vapor-pink text-vapor-pink hover:bg-vapor-pink hover:text-vapor-bg
           shadow-neon-pink relative border-2 px-12 py-4 text-3xl tracking-widest
-          transition-all duration-200 hover:scale-105
-          active:scale-95
+          transition-all duration-200 hover:scale-105 active:scale-95
         "
-        onClick={() => void navigate({ to: '/songs' })}
       >
         ▶ PRESS START
       </button>
 
-      {/* Status backend en bas */}
+      {/* Leaderboard */}
+      <button
+        type="button"
+        onClick={() => void navigate({ to: '/leaderboard', search: { songId: '' } })}
+        className="
+          font-display border-vapor-purple text-vapor-purple hover:bg-vapor-purple hover:text-vapor-bg
+          mt-4 border px-12 py-3 text-xl tracking-widest
+          transition-all duration-200 hover:scale-105 active:scale-95
+        "
+      >
+        ◈ LEADERBOARD
+      </button>
+
+      {/* Status backend */}
       <div className="font-body fixed bottom-6 left-6 z-20 text-xs">
         <div className="flex items-center gap-2">
-          <span
-            className={
-              apiStatus === 'ok'
-                ? 'text-vapor-cyan'
-                : apiStatus === 'fail'
-                  ? 'text-vapor-pink'
-                  : 'text-vapor-white/50'
-            }
-          >
-            ●
-          </span>
+          <span className={
+            apiStatus === 'ok'   ? 'text-vapor-cyan' :
+            apiStatus === 'fail' ? 'text-vapor-pink' : 'text-vapor-white/50'
+          }>●</span>
           <span className="text-vapor-white/70">
-            {apiStatus === 'ok' && 'BACKEND ONLINE'}
+            {apiStatus === 'ok'       && 'BACKEND ONLINE'}
             {apiStatus === 'checking' && 'CONNECTING...'}
-            {apiStatus === 'fail' && 'BACKEND OFFLINE'}
+            {apiStatus === 'fail'     && 'BACKEND OFFLINE'}
           </span>
         </div>
         {serverTime && (
@@ -86,10 +108,18 @@ function HomePage() {
         )}
       </div>
 
-      {/* Version en bas à droite */}
+      {/* Version */}
       <p className="font-body text-vapor-white/30 fixed right-6 bottom-6 z-20 text-xs">
-        v0.4.0 — étape 4
+        v0.7.0
       </p>
+
+      {/* Modal paramètres */}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onSave={handleSaveSettings}
+        />
+      )}
     </div>
   );
 }
