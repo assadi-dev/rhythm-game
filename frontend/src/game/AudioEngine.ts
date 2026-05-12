@@ -3,8 +3,10 @@ export class AudioEngine {
   private gainNode: GainNode | null = null;
   private sourceNode: AudioBufferSourceNode | null = null;
   private startTime = 0;
-  private pausedContextTime = 0; // context.currentTime au moment du pause
+  private pausedContextTime = 0;
   private _volume = 0.8;
+  private _songDuration = 0; // secondes — 0 si pas de fichier audio
+  private _songEnded = false;
 
   // ── Initialisation ──────────────────────────────────────────────────────────
 
@@ -52,12 +54,21 @@ export class AudioEngine {
   play(buffer: AudioBuffer, delaySeconds = 0): void {
     if (!this.context) throw new Error('AudioEngine: call unlock() first');
     this.sourceNode?.stop();
+    this._songDuration = buffer.duration;
+    this._songEnded    = false;
     this.sourceNode = this.context.createBufferSource();
     this.sourceNode.buffer = buffer;
     this.sourceNode.connect(this.gainNode ?? this.context.destination);
     this.startTime = this.context.currentTime + delaySeconds;
     this.sourceNode.start(this.startTime);
+    this.sourceNode.onended = () => { this._songEnded = true; };
   }
+
+  // Durée totale du morceau chargé (0 si pas de fichier audio)
+  get songDuration(): number { return this._songDuration; }
+
+  // Vrai quand le AudioBufferSourceNode a fini de jouer
+  get isSongEnded(): boolean { return this._songEnded; }
 
   playTone(frequency = 440, duration = 0.15): void {
     if (!this.context) throw new Error('AudioEngine: call unlock() first');
@@ -113,9 +124,11 @@ export class AudioEngine {
   destroy(): void {
     this.sourceNode?.stop();
     void this.context?.close();
-    this.context  = null;
-    this.gainNode = null;
-    this.sourceNode = null;
+    this.context       = null;
+    this.gainNode      = null;
+    this.sourceNode    = null;
     this.pausedContextTime = 0;
+    this._songDuration = 0;
+    this._songEnded    = false;
   }
 }

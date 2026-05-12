@@ -5,6 +5,7 @@ import { ScoreSystem } from '../systems/ScoreSystem';
 import type { AudioEngine } from '../AudioEngine';
 import type { NoteData } from '../../types/chart';
 import { getSettings, displayCode } from '../../store/settings';
+import { generateNotes, chartSeed, type Difficulty } from '../beatGenerator';
 import {
   LANE_COUNT, NOTE_SPEED, JUDGMENT_Y_RATIO,
   C_BG, C_CYAN, C_WHITE, LANE_COLORS,
@@ -39,6 +40,8 @@ export class GameScene extends Phaser.Scene {
   private pending: NoteData[] = [];
   private originalNotes: NoteData[] = [];
   private scoring!: ScoreSystem;
+  private chartBpm = 120;
+  private chartDifficulty: Difficulty = 'NORMAL';
   private judgmentY = 0;
   private laneX: number[] = [];
   private started = false;
@@ -66,7 +69,22 @@ export class GameScene extends Phaser.Scene {
 
   setAudio(audio: AudioEngine): void { this._audio = audio; }
 
-  start(): void { this.started = true; }
+  // GameCanvas appelle audio.play() AVANT start() — on connaît la durée réelle ici
+  start(): void {
+    const songDuration = this._audio.songDuration;
+    if (songDuration > 0) {
+      // Regénère les notes pour couvrir toute la durée audio réelle
+      // Seed dérivé du chartId → même chanson = même chart (reproductible)
+      this.originalNotes = generateNotes(
+        this.chartBpm,
+        songDuration,
+        this.chartDifficulty,
+        chartSeed(this.chartId),
+      );
+      this.pending = this.originalNotes.map(n => ({ ...n }));
+    }
+    this.started = true;
+  }
 
   pause(): void {
     if (!this.started || this.ended || this.isPaused) return;
@@ -121,13 +139,19 @@ export class GameScene extends Phaser.Scene {
     this.setupInput();
 
     const raw = this.cache.json.get('chart') as {
-      notes?: NoteData[]; title?: string; bpm?: number;
+      notes?: NoteData[]; title?: string; bpm?: number; level?: string;
     } | null;
+
+    // Métadonnées utilisées dans start() pour regénérer les notes sur la durée réelle
+    this.chartBpm        = raw?.bpm ?? 120;
+    this.chartDifficulty = (['EASY', 'HARD'].includes(raw?.level ?? '') ? raw!.level : 'NORMAL') as Difficulty;
+
+    // Notes initiales (courtes) — remplacées dans start() si audio disponible
     this.originalNotes = raw?.notes ?? makeDemoChart();
     this.pending = this.originalNotes.map(n => ({ ...n }));
 
     const title = raw?.title ?? 'DEMO TRACK';
-    const bpm   = raw?.bpm   ?? 120;
+    const bpm   = this.chartBpm;
     this.add.text(16, 16, title, { fontFamily: '"VT323"', fontSize: '26px', color: '#ff71ce' })
       .setAlpha(0.5).setDepth(10);
     this.add.text(16, 44, `${bpm} BPM`, { fontFamily: '"Space Mono"', fontSize: '11px', color: '#01cdfe' })
@@ -163,8 +187,13 @@ export class GameScene extends Phaser.Scene {
       .setColor(comboColor(mult));
     this.multiplierText.setText(mult > 1 ? `×${mult.toFixed(1)} BONUS` : '');
 
+    // Fin de partie : toutes les notes jouées ET le morceau est terminé
+    // Si pas de fichier audio (songDuration=0) on termine dès la dernière note
     if (this.pending.length === 0 && this.notes.length === 0) {
-      this.endGame();
+      const hasSong = this._audio.songDuration > 0;
+      if (!hasSong || this._audio.isSongEnded) {
+        this.endGame();
+      }
     }
   }
 
