@@ -1,4 +1,6 @@
 {
+  "name": "rhythm-game-mvp",
+  "version": "0.1.0",
   "packageManager": "npm@8.5.0",
   "dependencies": {
     "turbo": "^2.9.12"
@@ -6,6 +8,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "start": "turbo run start",
     "check-types": "turbo run check-types"
   },
   "workspaces": [
