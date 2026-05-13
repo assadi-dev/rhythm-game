@@ -2,6 +2,14 @@
 
 Jeu de rythme 4-lanes style Project DIVA / Osu!mania avec leaderboard global et détecteur de beats automatique.
 
+**Demo live :** https://rythmmusic-app-8htkwr-55c813-212-227-194-86.sslip.io/
+
+## Aperçu
+
+| Écran d'accueil | Gameplay |
+|---|---|
+| ![Écran d'accueil](preview/screen-1.png) | ![Gameplay](preview/screen-2.png) |
+
 ## 🛠️ Stack technique
 
 | Côté | Tech |
