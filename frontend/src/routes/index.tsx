@@ -34,20 +34,6 @@ function HomePage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
 
-      {/* Bouton paramètres — coin supérieur droit */}
-      <button
-        type="button"
-        onClick={() => setShowSettings(true)}
-        title="Paramètres"
-        className="
-          font-display fixed top-6 right-6 z-20
-          text-vapor-white/30 hover:text-vapor-cyan
-          text-2xl transition-colors duration-200
-        "
-      >
-        ⚙
-      </button>
-
       {/* Kanji décoratif */}
       <p className="font-jp text-vapor-cyan/60 mb-4 text-2xl tracking-widest">
         リズム・ゲーム
@@ -75,7 +61,7 @@ function HomePage() {
         ▶ PRESS START
       </button>
 
-      {/* Leaderboard */}
+      {/* Score global */}
       <button
         type="button"
         onClick={() => void navigate({ to: '/leaderboard', search: { songId: undefined } })}
@@ -85,7 +71,20 @@ function HomePage() {
           transition-all duration-200 hover:scale-105 active:scale-95
         "
       >
-        ◈ LEADERBOARD
+        ◈ SCORE GLOBAL
+      </button>
+
+      {/* Paramètres */}
+      <button
+        type="button"
+        onClick={() => setShowSettings(true)}
+        className="
+          font-display border-vapor-cyan/50 text-vapor-cyan/70 hover:border-vapor-cyan hover:text-vapor-cyan hover:bg-vapor-cyan/10
+          mt-3 border px-12 py-3 text-xl tracking-widest
+          transition-all duration-200 hover:scale-105 active:scale-95
+        "
+      >
+        ⚙ PARAMÈTRES
       </button>
 
       {/* Status backend */}
