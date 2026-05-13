@@ -100,7 +100,7 @@ npx tsx beat-detector.ts path/to/song.mp3 --output ../backend/assets/charts/
 
 ## 🎮 Gameplay
 
-- **4 lanes** — touches `D` `F` `J` `K` (ou tap mobile)
+- **4 lanes** — touches `←` `↓` `↑` `→` (touches fléchées, reconfigurables en jeu)
 - **Timing** : Web Audio API exclusivement (`AudioContext.currentTime`)
 
 | Fenêtre | Jugement | Points | Combo |
