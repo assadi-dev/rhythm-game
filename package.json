@@ -1,7 +1,10 @@
 {
   "name": "rhythm-game-mvp",
   "version": "0.1.0",
-  "packageManager": "npm@8.5.0",
+  "engines": {
+    "node": ">=24.x"
+  },
+  "packageManager": "npm@11.10.1",
   "dependencies": {
     "turbo": "^2.9.12"
   },
