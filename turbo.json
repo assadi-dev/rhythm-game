@@ -12,6 +12,13 @@
                 "!.next/cache/**"
             ]
         },
+        "start": {
+            "dependsOn": [
+                "build"
+            ],
+            "persistent": true,
+            "cache": true
+        },
         "check-types": {
             "dependsOn": [
                 "^check-types"
@@ -20,6 +27,6 @@
         "dev": {
             "persistent": true,
             "cache": true
-        }
+        },
     }
 }

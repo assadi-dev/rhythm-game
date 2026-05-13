@@ -2,14 +2,14 @@ import express, { type Express, type Request, type Response } from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { songsRouter }       from './routes/songs.js';
-import { chartsRouter }      from './routes/charts.js';
-import { scoresRouter }      from './routes/scores.js';
+import { songsRouter } from './routes/songs.js';
+import { chartsRouter } from './routes/charts.js';
+import { scoresRouter } from './routes/scores.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
-import { uploadRouter }      from './routes/upload.js';
+import { uploadRouter } from './routes/upload.js';
 
-const __dirname  = path.dirname(fileURLToPath(import.meta.url));
-const assetsDir  = path.join(__dirname, '../assets');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const assetsDir = path.join(__dirname, '../assets');
 
 export function createApp(): Express {
   const app = express();
@@ -31,11 +31,18 @@ export function createApp(): Express {
   });
 
   // ---- Routes API ----
-  app.use('/api/upload',      uploadRouter);
-  app.use('/api/songs',       songsRouter);
-  app.use('/api/charts',      chartsRouter);
-  app.use('/api/scores',      scoresRouter);
+  app.use('/api/upload', uploadRouter);
+  app.use('/api/songs', songsRouter);
+  app.use('/api/charts', chartsRouter);
+  app.use('/api/scores', scoresRouter);
   app.use('/api/leaderboard', leaderboardRouter);
+
+  // ---- Frontend build ----
+  app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+  app.get('*', (_req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
+  });
+
 
   // ---- 404 ----
   app.use((_req: Request, res: Response) => {
