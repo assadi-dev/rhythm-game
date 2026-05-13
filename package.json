@@ -1,0 +1,15 @@
+{
+  "packageManager": "npm@8.5.0",
+  "dependencies": {
+    "turbo": "^2.9.12"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "check-types": "turbo run check-types"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}

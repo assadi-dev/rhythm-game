@@ -1,0 +1,25 @@
+{
+    "$schema": "./node_modules/turbo/schema.json",
+    "ui": "tui",
+    "cacheDir": ".turbo/cache",
+    "tasks": {
+        "build": {
+            "dependsOn": [
+                "^build"
+            ],
+            "outputs": [
+                ".next/**",
+                "!.next/cache/**"
+            ]
+        },
+        "check-types": {
+            "dependsOn": [
+                "^check-types"
+            ]
+        },
+        "dev": {
+            "persistent": true,
+            "cache": true
+        }
+    }
+}
