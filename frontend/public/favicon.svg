@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="6" fill="#1a0b2e"/>
+  <!-- 4 lanes (4 thin vertical bars) -->
+  <rect x="5"  y="4" width="4" height="18" rx="1" fill="#b967ff" opacity="0.4"/>
+  <rect x="11" y="4" width="4" height="18" rx="1" fill="#b967ff" opacity="0.4"/>
+  <rect x="17" y="4" width="4" height="18" rx="1" fill="#b967ff" opacity="0.4"/>
+  <rect x="23" y="4" width="4" height="18" rx="1" fill="#b967ff" opacity="0.4"/>
+  <!-- judgment line -->
+  <rect x="3" y="23" width="26" height="2" rx="1" fill="#ff71ce"/>
+  <!-- notes falling -->
+  <rect x="5"  y="8"  width="4" height="5" rx="2" fill="#ff71ce"/>
+  <rect x="17" y="5"  width="4" height="5" rx="2" fill="#01cdfe"/>
+  <rect x="11" y="14" width="4" height="5" rx="2" fill="#fffb96"/>
+  <rect x="23" y="11" width="4" height="5" rx="2" fill="#01cdfe"/>
+</svg>
