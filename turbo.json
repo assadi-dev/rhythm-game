@@ -2,6 +2,15 @@
     "$schema": "./node_modules/turbo/schema.json",
     "ui": "tui",
     "cacheDir": ".turbo/cache",
+    "globalDependencies": [
+        ".env"
+    ],
+    "globalEnv": [
+        "PORT",
+        "NODE_ENV",
+        "DATABASE_URL",
+        "CORS_ORIGIN"
+    ],
     "tasks": {
         "build": {
             "dependsOn": [
@@ -17,7 +26,7 @@
                 "build"
             ],
             "persistent": true,
-            "cache": true
+            "cache": false
         },
         "check-types": {
             "dependsOn": [
@@ -26,7 +35,7 @@
         },
         "dev": {
             "persistent": true,
-            "cache": true
+            "cache": false
         },
     }
 }

@@ -9,14 +9,16 @@ Jeu de rythme 4-lanes style Project DIVA / Osu!mania avec leaderboard global et 
 | **Frontend** | React 18 + Vite + TypeScript + Tailwind + TanStack Router + Phaser 3 |
 | **Backend** | Node.js + Express + TypeScript + Drizzle ORM + PostgreSQL |
 | **Tools** | TypeScript (beat detector script) |
+| **Monorepo** | Turborepo |
 
 ## 📁 Structure
 
 ```
 rhythm-game/
-├── frontend/     → React app + Phaser game (port :5173)
-├── backend/      → Express API (port :3001)
-└── tools/        → Scripts CLI (beat-detector, etc.)
+├── .env                → Variables d'environnement partagées (racine Turbo)
+├── frontend/           → React app + Phaser game (port :5173)
+├── backend/            → Express API (port :3001)
+└── tools/              → Scripts CLI (beat-detector)
 ```
 
 ## 🚀 Démarrage rapide
@@ -24,12 +26,23 @@ rhythm-game/
 ### Prérequis
 
 - **Node.js** ≥ 20
+- **npm** ≥ 8
 - **PostgreSQL** ≥ 14 (en local ou via Docker)
-- **pnpm** (recommandé) ou npm
 
-### 1. PostgreSQL
+### 1. Variables d'environnement
 
-Crée la base avec un des moyens suivants :
+Édite le `.env` à la racine du projet :
+
+```env
+PORT=3001
+NODE_ENV=development
+DATABASE_URL=postgresql://postgres:password@localhost:5432/rhythm_game
+CORS_ORIGIN=http://localhost:5173
+```
+
+> Toutes les variables sont centralisées ici — Turbo les distribue automatiquement aux workspaces.
+
+### 2. PostgreSQL
 
 **Option A — psql local :**
 ```bash
@@ -46,53 +59,83 @@ docker run -d \
   postgres:16
 ```
 
-### 2. Backend
+### 3. Installation & démarrage
+
+```bash
+npm install          # installe toutes les dépendances (root + workspaces)
+npm run dev          # démarre frontend + backend en parallèle via Turbo
+```
+
+- Frontend → `http://localhost:5173`
+- Backend  → `http://localhost:3001`
+
+Test API : `curl http://localhost:3001/api/ping` → `{ "ok": true, ... }`
+
+### 4. Base de données
 
 ```bash
 cd backend
-cp .env.example .env       # Configure DATABASE_URL si besoin
-npm install
-npm run dev                 # → http://localhost:3001
+npm run db:generate  # génère les migrations Drizzle
+npm run db:migrate   # applique les migrations
+npm run db:studio    # GUI pour explorer la DB
+npm run db:seed      # (optionnel) données de démo
 ```
 
-Test : `curl http://localhost:3001/api/ping` doit renvoyer `{ "ok": true, ... }`.
-
-### 3. Frontend
-
-Dans un **autre terminal** :
+### 5. Beat detector (MP3 → chart JSON)
 
 ```bash
-cd frontend
-npm install
-npm run dev                 # → http://localhost:5173
+cd tools
+npx tsx beat-detector.ts path/to/song.mp3 --output ../backend/assets/charts/
 ```
-
-Ouvre `http://localhost:5173` dans le navigateur. Tu dois voir :
-- Le titre "NEON TEMPO" en rose néon clignotant
-- Une grille perspective vaporwave en fond
-- En bas à gauche : `● BACKEND ONLINE` (en cyan) — preuve que les deux serveurs communiquent
 
 ## 📋 État d'avancement
 
-- [x] **Étape 1** — Setup projets, communication front ↔ back, design vaporwave
-- [ ] **Étape 2** — AudioEngine (Web Audio API) + premier proof of concept Phaser
-- [ ] **Étape 3** — Gameplay complet (notes, scoring, combo)
-- [ ] **Étape 4** — Pages React (sélection musique, résultats, leaderboard)
-- [ ] **Étape 5** — Backend complet (Drizzle schema, routes, persistance)
-- [ ] **Étape 6** — Beat detector automatique
+- [x] **Étape 1** — Setup monorepo, communication front ↔ back, design vaporwave
+- [x] **Étape 2** — AudioEngine (Web Audio API) + GameScene minimaliste
+- [x] **Étape 3** — Gameplay complet (4 lanes, scoring, combo, effets visuels)
+- [x] **Étape 4** — Pages React (sélection musique, résultats, leaderboard)
+- [x] **Étape 5** — Backend complet (Drizzle schema, routes, persistance PostgreSQL)
+- [x] **Étape 6** — Beat detector automatique (script TS)
+- [x] **Étape 7** — Intégration finale + polish
+
+## 🎮 Gameplay
+
+- **4 lanes** — touches `D` `F` `J` `K` (ou tap mobile)
+- **Timing** : Web Audio API exclusivement (`AudioContext.currentTime`)
+
+| Fenêtre | Jugement | Points | Combo |
+|---------|----------|--------|-------|
+| 0–33 ms | COOL | 1000 | +1 |
+| 33–66 ms | FINE | 500 | +1 |
+| 66–100 ms | SAFE | 200 | reset |
+| 100–133 ms | SAD | 50 | reset |
+| > 133 ms | MISS | 0 | reset |
+
+**Rangs** : 95%+ SS · 90%+ S · 80%+ A · 70%+ B · 60%+ C · <60% D
 
 ## 🎨 Direction artistique
 
 Vaporwave / 和風 (style japonais rétro).
 
-Palette :
-- `#1a0b2e` — violet nuit profond (fond)
-- `#ff71ce` — rose néon (accent principal)
-- `#01cdfe` — cyan néon (accent secondaire)
-- `#b967ff` — violet électrique
-- `#fffb96` — jaune crème (sun)
+| Variable CSS | Valeur | Usage |
+|---|---|---|
+| `--vapor-bg` | `#1a0b2e` | fond |
+| `--vapor-pink` | `#ff71ce` | accent principal |
+| `--vapor-cyan` | `#01cdfe` | accent secondaire |
+| `--vapor-purple` | `#b967ff` | violet électrique |
+| `--vapor-yellow` | `#fffb96` | jaune crème |
 
-Fonts :
-- **Display** : VT323 (titres, score)
-- **Body** : Space Mono (interface)
-- **Décoration** : Noto Serif JP (kanji)
+Fonts : **VT323** (titres/score) · **Space Mono** (UI) · **Noto Serif JP** (kanji)
+
+## 📡 API REST
+
+```
+GET  /api/ping
+GET  /api/songs
+GET  /api/songs/:id
+GET  /api/charts/:id
+POST /api/sessions/start
+POST /api/scores
+GET  /api/leaderboard/global
+GET  /api/leaderboard/song/:id
+```
