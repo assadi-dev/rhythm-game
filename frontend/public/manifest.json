@@ -4,7 +4,7 @@
   "description": "4-lane vaporwave rhythm game",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "portrait",
   "background_color": "#1a0b2e",
   "theme_color": "#1a0b2e",
   "icons": [
